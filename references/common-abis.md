@@ -2,6 +2,20 @@
 
 Quick reference for on-chain analytics. All topic0 hashes are keccak256 of the canonical event signature (no spaces, no parameter names, no `indexed` keyword).
 
+## Contents
+- [ERC-20 Token Standard](#erc-20-token-standard)
+- [ERC-721 Non-Fungible Token](#erc-721-non-fungible-token)
+- [ERC-1155 Multi Token](#erc-1155-multi-token)
+- [ERC-4626 Tokenized Vault](#erc-4626-tokenized-vault)
+- [Uniswap V3 Pool Events](#uniswap-v3-pool-events)
+- [Uniswap V3 Pool State Interface](#uniswap-v3-pool-state-interface)
+- [Uniswap V4 Pool State (via StateLibrary)](#uniswap-v4-pool-state-via-statelibrary)
+- [Uniswap V3 NonfungiblePositionManager](#uniswap-v3-nonfungiblepositionmanager)
+- [Uniswap V3 Quoter](#uniswap-v3-quoter)
+- [Algebra CLAMM — Delta vs Uniswap V3](#algebra-clamm--delta-vs-uniswap-v3)
+- [EIP-1967 Proxy Storage Slots](#eip-1967-proxy-storage-slots)
+- [Multicall3](#multicall3)
+
 ---
 
 ## ERC-20 Token Standard
@@ -668,6 +682,93 @@ const result = await publicClient.simulateContract({
 ```
 
 Sending an actual transaction to the Quoter will waste gas and revert.
+
+---
+
+## Algebra CLAMM — Delta vs Uniswap V3
+
+Algebra is a modular concentrated liquidity AMM used by Camelot (Arbitrum), QuickSwap (Polygon), and Katana (Ronin). It shares Uniswap V3's concentrated liquidity math (`price = 1.0001^tick`) but differs in architecture and some ABIs.
+
+### Architecture Difference
+
+- **Uniswap V3:** Monolithic pool — all logic (swapping, liquidity, fees) in one contract.
+- **Algebra Integral:** Modular — immutable Core + tailored Plugins (dynamic fees, limit orders, farming). Pool contract is lighter; extensions via external plugin calls.
+
+### Event Compatibility — topic0 Hashes
+
+**Pool events share identical topic0 hashes with Uniswap V3.** The canonical event signatures use the same parameter types in the same order. Parameter names (`bottomTick` vs `tickLower`) do not affect the keccak256 hash — only the event name and parameter types matter.
+
+| Event | Canonical Signature | topic0 | V3 Compatible? |
+|-------|-------------------|--------|----------------|
+| Mint | `Mint(address,address,int24,int24,uint128,uint256,uint256)` | `0x7a53080ba414158be7ec69b987b5fb7d07dee101fe85488f0853ae16239d0bde` | ✅ Same |
+| Burn | `Burn(address,int24,int24,uint128,uint256,uint256)` | `0x0c396cd989a39f4459b5fa1aed6a9a8dcdbc45908acfd67e028cd568da98982c` | ✅ Same |
+| Swap | `Swap(address,address,int256,int256,uint160,uint128,int24)` | `0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67` | ✅ Same |
+
+> **Field naming differs in the ABI:** Algebra uses `bottomTick`/`topTick` where V3 uses `tickLower`/`tickUpper`, and `price` where V3 uses `sqrtPriceX96`. When decoding with a typed ABI, use the protocol-specific field names. When filtering by topic0, V3 and Algebra events are interchangeable.
+
+*Source: `IAlgebraPoolEvents.sol` in `cryptoalgebra/Algebra` (integral-v1.2.2)*
+
+### Pool State: `globalState()` Replaces `slot0()`
+
+Algebra does NOT have `slot0()`. Pool state is exposed via `globalState()`:
+
+```solidity
+function globalState() external view returns (
+    uint160 price,          // equivalent to sqrtPriceX96
+    int24 tick,             // current tick
+    uint16 lastFee,         // last applied fee (1e-6 units, dynamic)
+    uint8 pluginConfig,     // bitmask for active plugins
+    uint16 communityFee,    // protocol fee
+    bool unlocked           // reentrancy lock
+);
+```
+Selector: `0xe76c01e4`
+
+| V3 `slot0()` Field | Algebra `globalState()` Equivalent |
+|--------------------|------------------------------------|
+| `sqrtPriceX96` | `price` |
+| `tick` | `tick` |
+| `observationIndex` | _(removed — oracles handled via plugins)_ |
+| `observationCardinality` | _(removed)_ |
+| `observationCardinalityNext` | _(removed)_ |
+| `feeProtocol` | `communityFee` |
+| `unlocked` | `unlocked` |
+| _(N/A)_ | `lastFee` (dynamic, plugin-managed) |
+| _(N/A)_ | `pluginConfig` (plugin activation bitmask) |
+
+### NonfungiblePositionManager: `positions()` Differences
+
+Algebra's NPM `positions(uint256)` returns a **different struct** than V3:
+
+| Field | V3 Type | Algebra Type | Note |
+|-------|---------|-------------|------|
+| nonce | `uint96` | `uint88` | Different width |
+| operator | `address` | `address` | Same |
+| token0 | `address` | `address` | Same |
+| token1 | `address` | `address` | Same |
+| fee | `uint24` | _(absent)_ | Algebra uses dynamic fees, no fixed tier |
+| deployer | _(absent)_ | `address` | Algebra-specific: pool factory identifier |
+| tickLower | `int24` | `int24` | Same (NPM uses `tickLower`, not `bottomTick`) |
+| tickUpper | `int24` | `int24` | Same |
+| liquidity | `uint128` | `uint128` | Same |
+| feeGrowthInside0LastX128 | `uint256` | `uint256` | Same |
+| feeGrowthInside1LastX128 | `uint256` | `uint256` | Same |
+| tokensOwed0 | `uint128` | `uint128` | Same |
+| tokensOwed1 | `uint128` | `uint128` | Same |
+
+> **Selector differs from V3.** Do not assume `0x99fbab88` works for Algebra NPM. The struct layout change means a different ABI encoding and different selector. Verify from the deployed contract.
+
+*Source: `INonfungiblePositionManager.sol` in `cryptoalgebra/Algebra`*
+
+### Tick Spacing
+
+V3 fixes tick spacing per fee tier (e.g., 0.3% = 60). Algebra allows **configurable tick spacing per pool**, set at creation via `AlgebraFactory`. Query `tickSpacing()` on the pool contract to get the value.
+
+### Detection: V3 vs Algebra Pool
+
+1. Call `globalState()` (selector `0xe76c01e4`) — success = Algebra pool
+2. Call `slot0()` (selector `0x3850c7bd`) — success = Uniswap V3 pool
+3. Alternatively, check the factory address against known factories per chain
 
 ---
 

@@ -116,6 +116,65 @@ Where:
 
 ---
 
+## Position Owner Resolution `[CORE]`
+
+When liquidity is added via a NonfungiblePositionManager (NPM), the pool's `Mint` event shows `owner = NPM contract address`, NOT the actual LP wallet. Resolving the real LP requires tracing through the NPM layer.
+
+### Resolution hierarchy
+
+| Method | Data Source | Resolves To | Accuracy |
+|--------|-----------|-------------|----------|
+| `NPM.ownerOf(tokenId)` | `eth_call` at current block | Current NFT holder | High — but may be a staking contract, not an EOA |
+| ERC-721 `Transfer(address(0), to, tokenId)` | `eth_getLogs` on NPM contract | Original minter / first owner | High — captures creation-time owner |
+| `tx.from` of the mint transaction | `eth_getTransactionByHash` | Initiating wallet (EOA) | Moderate — may be a router or aggregator |
+
+### Step-by-step resolution flow
+
+**Step 1 — From pool `Mint` event, extract `tokenId`:**
+
+In the same transaction as the pool `Mint` event, the NPM emits:
+- `IncreaseLiquidity(uint256 indexed tokenId, uint128 liquidity, uint256 amount0, uint256 amount1)` — gives the `tokenId`
+- For new positions: also emits ERC-721 `Transfer(address(0), to, tokenId)` — the `to` field is the initial owner
+
+Match events by transaction hash to link pool `Mint` → NPM `IncreaseLiquidity` → ERC-721 `Transfer`.
+
+**Step 2 — Resolve current owner:**
+
+Call `NPM.ownerOf(tokenId)` via `eth_call`. Then classify the result:
+- If `eth_getCode(owner)` returns `0x` → **EOA**, this is the LP wallet. Done.
+- If `eth_getCode(owner)` returns bytecode → **contract owner**, proceed to Step 3.
+
+**Step 3 — Handle contract owners:**
+
+| Owner Type | Detection | Resolution Path |
+|-----------|-----------|-----------------|
+| **Staking / farming contract** | Known protocol addresses (Uniswap V3 Staker `0x1f98407aaB862CdDeF78Ed252D6f557aA5b0f00d`, Algebra FarmingCenter) | Query staking events: `DepositTransferred(tokenId, oldOwner, newOwner)` or contract-specific `deposits(tokenId)` mapping |
+| **Smart wallet (Gnosis Safe)** | Bytecode matches Safe proxy pattern (EIP-1167 clone of Safe singleton) | The Safe's owners are the real controllers — query `getOwners()` on the Safe |
+| **Vault / aggregator** (Arrakis, Gamma, Mellow) | Known manager contract addresses per chain | Vault manages positions on behalf of depositors — LP attribution requires vault-specific share tracking via `Deposit`/`Withdraw` events |
+| **DEX aggregator** (1inch, Paraswap) | Known router addresses | Usually transfers NFT to user in the same tx — check subsequent ERC-721 `Transfer` events within the same transaction |
+
+**Step 4 — Historical owner tracking (for lifecycle analysis):**
+
+Index ALL `Transfer(from, to, tokenId)` events on the NPM contract to build a complete ownership chain:
+```
+mint (from=0x0) → owner1 → staking_contract → owner1 → owner2 → burn (to=0x0)
+```
+Each transfer changes who can collect fees and withdraw liquidity. When reconstructing historical LP behavior, use the owner at the time of each action, not the current owner.
+
+### Batch resolution for pool-level LP analysis
+
+When enumerating all LPs in a pool:
+1. Scan all `Mint` events for the pool address to get all position-creating transactions
+2. Extract `tokenId` from corresponding `IncreaseLiquidity` events (same tx hash)
+3. Batch `ownerOf(tokenId)` calls via Multicall3
+4. Filter: only positions with `liquidity > 0` (skip burned/empty positions)
+5. Classify contract owners per the hierarchy above
+6. Aggregate: group positions by resolved owner to compute per-entity liquidity totals
+
+> **Edge case — dead positions:** Positions with `liquidity = 0` but non-zero `tokensOwed0/1` still have uncollected fees. Include these if analyzing total economic exposure, exclude if analyzing active liquidity only.
+
+---
+
 ## Quoting / Price Impact `[CORE]`
 
 ### Quoter contract via eth_call
@@ -218,3 +277,52 @@ All amounts are **unsigned** (unlike V3's signed amounts). The swap direction is
 - [ ] Active liquidity vs virtual liquidity distinguished (V3)? When computing TVL or available depth, only count liquidity within the current tick range as "active." Out-of-range positions still exist but do not participate in swaps until the price moves into their range.
 - [ ] MEV volume (sandwich, JIT) excluded from organic volume? Sandwich attacks inflate volume by 2-3x per victim swap. JIT liquidity does not inflate volume but skews fee distribution. Both should be flagged and optionally excluded depending on the analysis goal.
 - [ ] IL formula uses correct r = new_price/old_price? The impermanent loss formula `IL = 2*sqrt(r)/(1+r) - 1` requires `r` to be the ratio of the new price to the old price. Using the inverse (old/new) produces incorrect results. The formula yields a negative number representing the percentage loss relative to holding.
+
+---
+
+## Automated LP / Market Maker Behavioral Signals
+
+Heuristic signals for identifying automated liquidity provision bots vs passive LPs. **These are signals, not conclusions** — any single signal is weak evidence. Require 3+ corroborating signals before classifying an address as an automated LP.
+
+### Signal comparison
+
+| Feature | Passive LP | Automated LP / Market Maker |
+|---------|-----------|----------------------------|
+| **Position lifecycle** | Long-lived: Mint → Hold → Collect (weeks/months) | Short-lived: frequent Mint → Burn → Mint cycles (hours/days) |
+| **Rebalancing frequency** | Rarely or never adjusts position | High frequency: triggered by price drift or volatility thresholds |
+| **Transaction pattern** | Simple single-action txs (Mint, Collect) | Complex multicall txs: atomic Burn + Collect + Mint in one tx |
+| **Position width** | Static, often wide tick ranges | Dynamic, narrow ranges concentrated around current price |
+| **NFT footprint** | Few positions, long-lived tokenIds | Many tokenIds, most burned to zero liquidity ("dead NFTs") |
+| **Nonce progression** | Low to moderate nonce, diverse interactions | High nonce (>1,000) with concentrated DEX-only interactions |
+| **Gas strategy** | Default gas, price-insensitive | Optimized: private mempool, precise gas pricing |
+
+### Quantitative thresholds (heuristic, calibrate per protocol)
+
+| Signal | Threshold | Confidence |
+|--------|----------|------------|
+| Rebalancing events per day (Burn + Mint for same pool) | > 2 per day | High — passive LPs almost never rebalance daily |
+| Position width (`tickUpper - tickLower`) | < 2× tickSpacing | Moderate — very narrow ranges suggest active management |
+| Dead NFT ratio (positions with liquidity = 0) | > 50% of all positions ever held | High — indicates frequent position turnover |
+| Multicall usage ratio | > 80% of txs use multicall | High — signature of programmatic interaction |
+| Nonce with concentrated contract interactions | > 1,000 nonce with > 80% to DEX contracts | Moderate — consistent with bot operation |
+
+### Known automated LP protocol footprints
+
+| Protocol | On-Chain Signature |
+|----------|--------------------|
+| **Arrakis Finance** | Manager contracts interact with NPM via multicall; positions managed by vault contracts. Look for `Arrakis` in verified contract names or known factory addresses. |
+| **Gamma Strategies** | Heavy NPM multicall usage with frequent rebalancing. `Hypervisor` proxy contracts manage positions. |
+| **Bunni (V4)** | Uses Uniswap V4 hooks for on-chain rebalancing. Footprint is hook contract interactions rather than legacy NPM. |
+| **Mellow Protocol** | Permissionless vaults with `Strategy` contracts. Complex multi-step rebalancing through external DEX interactions. |
+
+### Verification workflow
+
+1. **Identify candidate addresses:** Filter by high rebalancing frequency (> 2 Burn+Mint cycles/day in the same pool)
+2. **Check nonce and interaction pattern:** High nonce + concentrated DEX interactions = bot candidate
+3. **Examine transaction internals:** Multicall usage, atomic position adjustments, gas optimization patterns
+4. **Confirm via funding trace:** Use `patterns/wallet-analytics.md` Entity Clustering — if multiple bot candidates share a common funder, confidence increases significantly
+5. **Cross-reference known protocols:** Check if the address matches known Arrakis/Gamma/Mellow manager contracts
+
+> **Confidence label convention:** Tag each identification as `[BOT: high/moderate/low confidence]` with the supporting signals listed. Never present bot classification as definitive without 3+ corroborating signals.
+
+*References: [Milionis et al., "Automated Market Making and Loss-Versus-Rebalancing" (2023)](https://arxiv.org/abs/2305.14604); [Willetts & Harrington, "RVR: Rebalancing-versus-Rebalancing" (2024)](https://arxiv.org/abs/2410.23404)*

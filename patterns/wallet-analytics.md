@@ -155,9 +155,46 @@ Track these wallets forward: their new positions and protocol interactions becom
 
 Upgrade individual wallet addresses to entity-level groupings by combining multiple behavioral signals:
 
-### Shared Funding Source
+### Shared Funding Source — Operational Methodology
 
-Trace each address back to its first incoming ETH transaction (gas funding). Addresses that received their initial gas from the same funder address — especially if the funder sent similar amounts in rapid succession — are candidates for same-entity grouping. This is the strongest single signal because every new wallet needs gas before it can operate.
+Trace each address back to its first incoming ETH transaction (gas funding). This is the strongest single signal because every new wallet needs gas before it can operate.
+
+**Step 1 — Find genesis funding transaction:**
+- Query the target address's full transaction history, sorted by block number ascending
+- **Via RPC (Tier A):** Use `eth_getLogs` for first inbound `Transfer` events to the address, or retrieve earliest transactions by scanning from a known creation block
+- **Via Block Explorer API (Tier D):** Blockscout/Etherscan `txlist` endpoint with `sort=asc&page=1&offset=1` returns the very first transaction. This is often the fastest method for finding genesis funding.
+- The first incoming value transfer (native ETH or token) reveals the funder address
+
+**Step 2 — Classify the funder:**
+
+| Funder Type | Detection | Implication |
+|-------------|-----------|-------------|
+| CEX hot wallet | Known address database (Tier D) or high tx volume + diverse counterparties | Weak signal alone — anyone can withdraw from an exchange. Strengthen by checking if the same CEX wallet funded multiple targets in a short window. |
+| Mixer / privacy protocol | Interaction with Tornado Cash, Railgun, or Aztec contracts | Deliberate obfuscation — flag for deeper investigation |
+| Bridge contract | Known bridge addresses per chain | Cross-chain activity — expand scope to source chain |
+| Direct EOA funder | `eth_getCode` returns `0x` | Strong signal — trace the funder recursively |
+| Contract (multisig, factory) | `eth_getCode` returns bytecode | Identify contract type (deployer, Safe, etc.) |
+
+**Step 3 — Fan-out analysis (check if funder → multiple targets):**
+- Query the funder's outbound value transfers in a time window around the target's funding tx (±1 hour is a good default)
+- If the same funder sent similar amounts to N addresses within that window, all N addresses are candidates for same-entity grouping
+- **Confidence scoring:**
+
+| Temporal Proximity | Confidence | Rationale |
+|-------------------|------------|-----------|
+| Same block | Highest | Almost certainly batched by the same operator |
+| Same hour | High | Strong coordination signal |
+| Same day | Moderate | Possible coordination, needs corroborating evidence |
+| Beyond 1 day | Weak | Only significant if amounts match precisely or behavioral overlap exists |
+
+**Step 4 — Recursive trace:**
+- If the direct funder is a single-purpose forwarding address (funded by exactly one source, sends to one or few destinations), trace one level deeper
+- Continue recursively until reaching: a CEX withdrawal, a mixer, a well-known labeled entity, or 5 hops (diminishing analytical returns beyond this depth)
+
+**Step 5 — Cross-chain funding trace:**
+- If the first inbound tx is from a bridge contract, identify the source chain and source address
+- Query the bridge contract's deposit events (e.g., OP Stack `DepositInitiated`, Arbitrum `MessageDelivered`) to find the corresponding source-chain transaction
+- Continue the funding trace on the source chain using the same methodology
 
 ### Synchronized Behavior
 

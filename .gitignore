@@ -1,0 +1,12 @@
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Agent installation directories (created by npx skills add)
+.agent/
+.agents/
+.claude/
+
+# Lock file (generated per-install)
+skills-lock.json

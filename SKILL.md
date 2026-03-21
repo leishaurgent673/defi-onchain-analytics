@@ -1,6 +1,6 @@
 ---
 name: defi-onchain-analytics
-description: Use when performing DeFi on-chain analytics via RPC — wallet profiling, protocol analysis, token metrics, DEX analytics, or smart contract state inspection on EVM chains (Ethereum, Arbitrum, Base, BSC, Polygon, Katana)
+description: Performs DeFi on-chain analytics via raw JSON-RPC. Use when profiling wallets, analyzing protocols or pools, inspecting token metrics, evaluating DEX liquidity, or reading smart contract state on EVM chains (Ethereum, Arbitrum, Base, BSC, Polygon, Katana). Do NOT use for off-chain data, CEX analytics, or non-EVM chains.
 ---
 
 # DeFi On-Chain Analytics
@@ -45,88 +45,49 @@ digraph phases {
 ### Phase 0: Scoping Gate — Active Consultation
 
 > **This phase is a guided conversation, NOT a passive form.**
-> Proactively ask questions, offer analysis approaches with trade-offs, and confirm understanding before proceeding.
+> Read `references/scoping-guide.md` for detailed consultation techniques, depth/angle options, field-by-field asking guidance, and anti-patterns.
 > **NEVER silently assume — always surface your assumptions as explicit questions.**
 
-#### Step 0.1: Intent Discovery
+#### Analysis Modes
 
-Before collecting any fields, understand **why** the user wants this analysis. Use structured questions with options to guide them efficiently.
+| Trigger | Mode | Emphasis |
+|---------|------|----------|
+| Suspicious activity / incident | 🔍 Forensic | Fund flows, timeline, counterparties |
+| Investment / trading decision | 📊 Due Diligence | Risk, PnL, position health |
+| Portfolio / position monitoring | 📈 Monitoring | Current state, health indicators |
+| Protocol evaluation / comparison | 🏗️ Protocol Assessment | TVL, risk params, governance |
+| Security review / audit prep | 🛡️ Security | Admin keys, upgrades, custody |
+| General curiosity / learning | 🔭 Exploratory | Broad survey, teach as you go |
 
-**Always ask — even if the user gives an address and says "check this":**
+#### Required Fields
 
-1. **What triggered this analysis?** _(determines analysis mode)_
+| # | Field | Required? | Default |
+|---|-------|-----------|---------|
+| 1 | **Target** | Yes | — |
+| 2 | **Chain** | Yes | — |
+| 3 | **Objective** | Yes | — |
+| 4 | **Hypothesis** | No | "Exploratory" |
+| 5 | **Timeframe** | No | Per depth choice |
+| 6 | **Expected output** | No | "Structured findings + narrative" |
+| 7 | **Data source policy** | No | raw RPC only |
+| 8 | **Anchor policy** | No | `safe` if supported |
+| 9 | **Capability tier** | Auto | Probe-based |
+| 10 | **RPC endpoint** | Auto | From `references/rpc-endpoints.ts` |
 
-   | Trigger | Mode | What it emphasizes |
-   |---------|------|--------------------|
-   | Suspicious activity / incident | 🔍 Forensic | Trace fund flows, timeline reconstruction, counterparty identification |
-   | Investment / trading decision | 📊 Due Diligence | Risk metrics, PnL, position health, token economics |
-   | Portfolio / position monitoring | 📈 Monitoring | Current state, health indicators, threshold alerts |
-   | Protocol evaluation / comparison | 🏗️ Protocol Assessment | TVL composition, risk parameters, governance, upgrade history |
-   | Security review / audit prep | 🛡️ Security | Admin keys, upgrade patterns, privileged functions, fund custody |
-   | General curiosity / learning | 🔭 Exploratory | Broad survey, explain what's interesting, teach as you go |
+#### Anchor Policy Options
 
-   > Present these as options. If the user's request maps clearly to one mode, **propose it and ask for confirmation** rather than asking from scratch.
+| Policy | `fromBlock` | `toBlock` | Use Case |
+|--------|------------|----------|----------|
+| `safe` | — | `safe` tag | **Default.** Finalized, no reorg risk. |
+| `pinned` | specific hex | specific hex | Reproducible snapshot at known block. |
+| `latest` | — | `latest` tag | Real-time data, accepts reorg risk. |
+| `historical-scan` | `0` or contract creation block | `safe` | **Full-chain event scanning.** Each event gets its own timestamp via `eth_getBlockByNumber`. Reproducibility footer must list the full scan range and the completion block. Use adaptive chunking (see `references/rpc-field-guide.md` Section 5). |
 
-2. **What decision will the results inform?** _(determines depth and output format)_
-   - Helps calibrate between "quick sanity check" vs "court-grade evidence trail"
-   - If user says "just curious" → still ask: "Curious about what specifically? I can focus on [2-3 relevant angles based on the target]."
+#### Blind Spot Disclosure
 
-3. **What do you already know?** _(avoids redundant work, catches misconceptions early)_
-   - "Is this address a protocol, a wallet, a token contract, or you're not sure?"
-   - "Have you interacted with this before, or is it completely new to you?"
-   - If user has a hypothesis → capture it; you'll test it explicitly in Phase 3.
+Before confirming, proactively flag what the analysis CANNOT see. See `references/scoping-guide.md` for templates.
 
-#### Step 0.2: Approach Negotiation — Present Options with Trade-offs
-
-Based on the intent, **proactively present 2-3 analysis approaches** with clear pros/cons. Don't ask the user to design the approach — propose and let them choose.
-
-**Depth Options:**
-
-| Option | What you get | Cost | Best for |
-|--------|-------------|------|----------|
-| 🟢 **Snapshot** — Current state only | Balance, positions, rates, health factors at one block | ~5-15 RPC calls, <1 min | Quick health check, "what does this address hold right now?" |
-| 🟡 **Window** — Recent period (7d/30d/custom) | Behavioral patterns, trends, recent PnL | ~50-300 calls, needs log scanning | "What has this address been doing recently?" |
-| 🔴 **Deep History** — Full lifecycle | Complete transaction history, total PnL, all counterparties | Hundreds-thousands of calls, may need archive node (Tier B) | Forensic investigation, full entity profiling |
-
-**Angle Options (present the 2-3 most relevant based on target type):**
-
-| Angle | Approach | Pros | Cons |
-|-------|----------|------|------|
-| **Top-down** | Protocol → pools → top addresses | Systematic, complete coverage | Misses cross-protocol activity |
-| **Bottom-up** | Address → transactions → counterparties → protocols | Follows the money, catches hidden connections | Can spiral without bounds |
-| **Comparative** | Side-by-side vs benchmark (similar protocols, top wallets) | Context-rich, relative assessment | Doubles the data collection work |
-| **Hypothesis-driven** | Test a specific claim with targeted data | Efficient, focused | May miss unexpected findings |
-
-> **Always recommend** one approach based on the user's stated intent. Explain why. Ask if they agree or want to adjust.
-
-#### Step 0.3: Field Collection — Conversational, Not Form
-
-Collect through natural dialogue. For **every** field the user doesn't specify, state your default assumption and ask for confirmation.
-
-| # | Field | Required? | Default | How to ask |
-|---|-------|-----------|---------|------------|
-| 1 | **Target** | Yes | — | If ambiguous: "I see an address — is this the main target, or should I also look at related contracts (e.g., the protocol's router, vault, or governance)?" |
-| 2 | **Chain** | Yes | — | Infer from address context if possible. If unclear: "Which chain? Ethereum / Arbitrum / Base / BSC / Polygon / Katana — or multiple?" |
-| 3 | **Objective** | Yes | — | Derived from Step 0.1. Restate in your own words: "So your main question is: [restatement]. Is that right?" |
-| 4 | **Hypothesis** | No | "Exploratory" | "Do you have a specific theory to test? (e.g., 'this wallet is connected to X', 'this protocol is under-collateralized') Or should I explore with fresh eyes?" |
-| 5 | **Timeframe** | No | Per Step 0.2 depth choice | "Based on [chosen depth], I'll look at [timeframe]. Want to adjust?" |
-| 6 | **Expected output** | No | "Structured findings + narrative" | "How should I deliver results? Options: **(a)** Quick summary with key metrics — good for a fast read. **(b)** Full report with evidence trail — good for sharing or deeper review. **(c)** Raw data tables — good if you'll do your own analysis." |
-| 7 | **Data source policy** | No | **raw RPC only** | "I'll use **raw RPC only** (highest confidence, zero trust assumptions). Want me to also pull from Etherscan/Sourcify for labels and source code? Adds context but introduces external trust." |
-| 8 | **Anchor policy** | No | `safe` if supported | Only explain if the user is technical or the choice matters: "`safe` = finalized, no reorg risk. `latest` = freshest but could reorg. I'll default to `safe`." |
-| 9 | **Capability tier** | Auto | Probe-based | Auto-probe silently, report result. |
-| 10 | **RPC endpoint** | Auto | From `references/rpc-endpoints.ts` | Auto-select, report choice. |
-
-#### Step 0.4: Blind Spot Disclosure
-
-**Before confirming, proactively flag what the analysis CANNOT see:**
-
-- "⚠️ On-chain analysis can't see: CEX internal transfers, OTC deals, off-chain agreements, L2 activity (unless we scope those chains too)."
-- If Tier A only: "Without archive/trace access, I won't capture native ETH internal transfers or historical state. I'll flag where this matters."
-- If no enrichment: "Without Etherscan labels, addresses will be raw hex — I'll note patterns but can't name entities."
-
-> This prevents users from over-trusting results and sets expectations early.
-
-#### Step 0.5: Confirmation Gate
+#### Confirmation Gate
 
 **Always present a structured summary before proceeding. NEVER skip this.**
 
@@ -134,12 +95,13 @@ Collect through natural dialogue. For **every** field the user doesn't specify, 
 ═══ ANALYSIS PLAN ═══
 🎯 Target: [address/protocol/token]
 🔗 Chain: [chain]
-📋 Objective: [clear restatement of what we're answering]
-🔬 Approach: [depth] + [angle] — [one-line rationale]
+📋 Objective: [clear restatement]
+🔬 Approach: [depth] + [angle]
 🧪 Hypothesis: [if any, or "Exploratory"]
 ⏱️ Timeframe: [window]
 📊 Output: [format]
 ⚡ Data policy: [Tier A / A+D / etc.]
+⚓ Anchor: [safe / pinned / latest / historical-scan]
 ⚠️ Blind spots: [key limitations]
 
 Estimated effort: ~[N] RPC calls
@@ -147,23 +109,12 @@ Estimated effort: ~[N] RPC calls
 ```
 
 **Gate rules:**
-- User must confirm (explicit "yes", "go", "looks good") OR adjust before Phase 1 begins.
-- If user says "just do it" without engaging → still present the plan, but frame it as: "Here's what I'll do — shout if anything looks off, otherwise I'm proceeding in 10 seconds."
+- User must confirm OR adjust before Phase 1 begins.
+- If user says "just do it" → present the plan, then proceed.
 - Auto-probe capability tier (Field 9) via test calls. Timeout/failure = assume Tier A.
-- Auto-select RPC endpoint (Field 10): read `references/rpc-endpoints.ts` → pick top Tier S/1 endpoint for the chain → probe with `eth_chainId` → fallback on failure. For BSC, MUST use an endpoint with `getLogs: true` (Tier 1/2 only). Log the selected endpoint in the reproducibility footer.
+- Auto-select RPC endpoint (Field 10): read `references/rpc-endpoints.ts` → pick top Tier S/1 → probe with `eth_chainId` → fallback on failure. For BSC, MUST use endpoint with `getLogs: true` (Tier 1/2 only).
 - **Cross-chain check:** If target involves bridges or multi-chain activity, flag and expand scope.
 - Load relevant pattern file(s) based on objective (see Pattern Loading below).
-
-#### Phase 0 Anti-Patterns — STOP if you catch yourself doing these:
-
-| ❌ Anti-pattern | ✅ Instead |
-|----------------|-----------|
-| Dumping all 10 fields as a form | Ask 2-3 targeted questions based on what user already provided |
-| Silently defaulting hypothesis to "Exploratory" | Ask: "Any specific theory to test, or explore broadly?" |
-| Assuming output format | Offer options with one-line descriptions of each |
-| Proceeding without confirmation | Always present the analysis plan and wait |
-| Not disclosing blind spots | Flag limitations upfront — users trust you more when you're honest about gaps |
-| Over-questioning when user is clearly expert | Match the user's sophistication — experts need fewer explanations, more options |
 
 ---
 
@@ -263,7 +214,7 @@ Scripts must be self-contained and runnable via `node` or `npx tsx`.
 
 ### Phase 3: Interpretation
 
-Read the relevant domain pattern file for analytical methods.
+Read the relevant domain pattern file for analytical methods. Apply the Investigation Discipline protocol throughout this phase (see below and `references/investigation-discipline.md`).
 
 **Classification-first.** Tag every finding before narrative:
 
@@ -306,6 +257,9 @@ Read the relevant domain pattern file for analytical methods.
 - [ ] Labels cross-referenced, not blindly trusted?
 - [ ] Off-chain blind spots acknowledged? (CEX internal, L2, OTC)
 - [ ] Every finding tagged with tier dependency?
+- [ ] **Blind Spot Audit completed?** (Layer 4 — see `references/investigation-discipline.md`)
+- [ ] **Gap Log produced?** (Layer 7 — every skipped method/source logged with reason and impact)
+- [ ] **Confidence-triggered deepening applied?** (Layer 5 — no Medium-confidence significant findings left unaddressed)
 
 **Domain-specific pitfall packs** — load based on Phase 0 objective. Full checklists in each pattern file.
 
@@ -342,7 +296,51 @@ Total RPC calls / Analysis timestamp
 
 Multiple files may load if objective spans domains. Reference files (`references/`) loaded on-demand during Phase 1-2.
 
-## Common Rationalizations
+### Cascade Triggers
+
+During Phase 2-3, load additional patterns when the investigation reveals new dimensions:
+
+| Trigger (during analysis) | Load |
+|--------------------------|------|
+| Entities or wallets identified that need profiling or clustering | `patterns/wallet-analytics.md` |
+| Unknown contract encountered requiring ABI resolution or storage inspection | `patterns/contract-inspection.md` |
+| Token supply, holder distribution, or vesting analysis needed | `patterns/token-analytics.md` |
+| Protocol-level risk, TVL, or oracle dependency assessment triggered | `patterns/protocol-analytics.md` |
+| DEX swap, liquidity, or position analysis required | `patterns/dex-analytics.md` |
+
+### Composed Investigation Recipes
+
+Common multi-pattern investigations and their recommended pattern combinations:
+
+| Investigation Type | Primary | Companions | Key Flow |
+|-------------------|---------|------------|----------|
+| **Market Structure** — who provides liquidity, how distributed, why | dex-analytics | wallet-analytics, contract-inspection | Position enumeration → owner resolution → entity clustering → funding trace |
+| **Whale Tracking** — identify, profile, predict behavior | wallet-analytics | token-analytics, dex-analytics | Balance snapshot → transfer history → behavioral fingerprinting → DEX activity |
+| **Protocol Risk** — TVL health, admin risk, oracle dependency | protocol-analytics | contract-inspection | TVL decomposition → proxy/admin inspection → oracle staleness check |
+| **Incident Forensics** — exploit trace, fund flow, counterparty ID | wallet-analytics | contract-inspection, dex-analytics | Fund flow trace → contract inspection → DEX swap analysis → entity clustering |
+| **Token Due Diligence** — supply integrity, holder risk, vesting pressure | token-analytics | wallet-analytics, contract-inspection | Supply audit → holder concentration → whale behavior → vesting schedule |
+
+## Investigation Discipline — 7-Layer Defense
+
+Read `references/investigation-discipline.md` for full methodology, DeFi-specific anti-rationalization phrases, iterative depth protocol, and adversarial self-review questions.
+
+| # | Layer | Rule | Active |
+|---|-------|------|--------|
+| 1 | **Anti-Rationalization** | Dismissal instincts are investigation signals. Wanting to say "probably normal" → investigate that exact thing deeper. | Always |
+| 2 | **Iterative Depth** | Phase 3 runs multiple passes. Pass 2 (Forensic/Deep History): adversarial re-examination — "if this were malicious, what would the evidence look like?" | 🔍🔴 |
+| 3 | **Anti-Normalization** | "Looks normal" is evidence of sophistication, not innocence. Adversarial actors design on-chain footprints to appear normal. "Too clean" = red flag. | Always |
+| 4 | **Blind Spot Audit** | Phase 4 must list what was NOT investigated and what each gap could hide. Empty blind spot audit = failed Phase 4. | Always |
+| 5 | **Confidence Deepening** | Confidence < High + significance ≥ Medium → additional query, cross-validation, OR explicit UNRESOLVED. No "Medium confidence, probably fine." | Always |
+| 6 | **Adversarial Self-Review** | Per major finding: "What is the opposite interpretation?" + "What adjacent pattern does this obscure?" + "What would falsify this?" + "Does any other finding enable this?" | Always (documented in 🔍) |
+| 7 | **Gap Logging** | Every skipped method/source logged with reason and potential impact. Silent omission = discipline violation. | Always |
+
+### Banned Dismissal Phrases
+
+If these appear in your reasoning → treat as investigation signal, not conclusion:
+
+> "probably just a whale" · "likely normal behavior" · "this is expected for a DEX pool" · "no suspicious activity found" · "the amounts are not unusual" · "this is just MEV" · "the timing is coincidental"
+
+### Common Rationalizations
 
 | Rationalization | Reality |
 |----------------|---------|
@@ -362,3 +360,5 @@ Multiple files may load if objective spans domains. Reference files (`references
 - Not disclosing when a method is skipped due to tier
 - Mixing data from different blocks without anchoring
 - Trusting entity labels without cross-referencing raw data
+- **Dismissing a finding without first asking "What would make this significant?"**
+- **Reporting a conclusion without disclosing what analysis was NOT performed**
