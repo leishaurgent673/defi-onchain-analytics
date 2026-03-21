@@ -214,7 +214,7 @@ Scripts must be self-contained and runnable via `node` or `npx tsx`.
 
 ### Phase 3: Interpretation
 
-Read the relevant domain pattern file for analytical methods.
+Read the relevant domain pattern file for analytical methods. Apply the Investigation Discipline protocol throughout this phase (see below and `references/investigation-discipline.md`).
 
 **Classification-first.** Tag every finding before narrative:
 
@@ -257,6 +257,9 @@ Read the relevant domain pattern file for analytical methods.
 - [ ] Labels cross-referenced, not blindly trusted?
 - [ ] Off-chain blind spots acknowledged? (CEX internal, L2, OTC)
 - [ ] Every finding tagged with tier dependency?
+- [ ] **Blind Spot Audit completed?** (Layer 4 — see `references/investigation-discipline.md`)
+- [ ] **Gap Log produced?** (Layer 7 — every skipped method/source logged with reason and impact)
+- [ ] **Confidence-triggered deepening applied?** (Layer 5 — no Medium-confidence significant findings left unaddressed)
 
 **Domain-specific pitfall packs** — load based on Phase 0 objective. Full checklists in each pattern file.
 
@@ -317,7 +320,27 @@ Common multi-pattern investigations and their recommended pattern combinations:
 | **Incident Forensics** — exploit trace, fund flow, counterparty ID | wallet-analytics | contract-inspection, dex-analytics | Fund flow trace → contract inspection → DEX swap analysis → entity clustering |
 | **Token Due Diligence** — supply integrity, holder risk, vesting pressure | token-analytics | wallet-analytics, contract-inspection | Supply audit → holder concentration → whale behavior → vesting schedule |
 
-## Common Rationalizations
+## Investigation Discipline — 7-Layer Defense
+
+Read `references/investigation-discipline.md` for full methodology, DeFi-specific anti-rationalization phrases, iterative depth protocol, and adversarial self-review questions.
+
+| # | Layer | Rule | Active |
+|---|-------|------|--------|
+| 1 | **Anti-Rationalization** | Dismissal instincts are investigation signals. Wanting to say "probably normal" → investigate that exact thing deeper. | Always |
+| 2 | **Iterative Depth** | Phase 3 runs multiple passes. Pass 2 (Forensic/Deep History): adversarial re-examination — "if this were malicious, what would the evidence look like?" | 🔍🔴 |
+| 3 | **Anti-Normalization** | "Looks normal" is evidence of sophistication, not innocence. Adversarial actors design on-chain footprints to appear normal. "Too clean" = red flag. | Always |
+| 4 | **Blind Spot Audit** | Phase 4 must list what was NOT investigated and what each gap could hide. Empty blind spot audit = failed Phase 4. | Always |
+| 5 | **Confidence Deepening** | Confidence < High + significance ≥ Medium → additional query, cross-validation, OR explicit UNRESOLVED. No "Medium confidence, probably fine." | Always |
+| 6 | **Adversarial Self-Review** | Per major finding: "What is the opposite interpretation?" + "What adjacent pattern does this obscure?" + "What would falsify this?" + "Does any other finding enable this?" | Always (documented in 🔍) |
+| 7 | **Gap Logging** | Every skipped method/source logged with reason and potential impact. Silent omission = discipline violation. | Always |
+
+### Banned Dismissal Phrases
+
+If these appear in your reasoning → treat as investigation signal, not conclusion:
+
+> "probably just a whale" · "likely normal behavior" · "this is expected for a DEX pool" · "no suspicious activity found" · "the amounts are not unusual" · "this is just MEV" · "the timing is coincidental"
+
+### Common Rationalizations
 
 | Rationalization | Reality |
 |----------------|---------|
@@ -337,3 +360,5 @@ Common multi-pattern investigations and their recommended pattern combinations:
 - Not disclosing when a method is skipped due to tier
 - Mixing data from different blocks without anchoring
 - Trusting entity labels without cross-referencing raw data
+- **Dismissing a finding without first asking "What would make this significant?"**
+- **Reporting a conclusion without disclosing what analysis was NOT performed**
