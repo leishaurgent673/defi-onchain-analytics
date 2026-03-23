@@ -271,6 +271,7 @@ Read the relevant domain pattern file for analytical methods. Apply the Investig
 - [ ] Labels cross-referenced, not blindly trusted?
 - [ ] Off-chain blind spots acknowledged? (CEX internal, L2, OTC)
 - [ ] Every finding tagged with tier dependency?
+- [ ] **Phase 3 Exit Gate passed?** (claim typing, Dismissal Log, counter-hypotheses — see `references/investigation-discipline.md`)
 - [ ] **Blind Spot Audit completed?** (Layer 4 — see `references/investigation-discipline.md`)
 - [ ] **Gap Log produced?** (Layer 7 — every skipped method/source logged with reason and impact)
 - [ ] **Confidence-triggered deepening applied?** (Layer 5 — no Medium-confidence significant findings left unaddressed)
