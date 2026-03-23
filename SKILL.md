@@ -108,8 +108,17 @@ Estimated effort: ~[N] RPC calls
 ═════════════════════
 ```
 
+```
+═══ ANALYTICAL CONTRACT ═══
+⚙ Tier A baseline: [list the RPC calls that MUST be made before any Tier D source is used]
+📜 Script trigger: [YES if any dependent flow / eth_getLogs scan / multi-hop trace is needed]
+🔍 Root cause standard: Any causal claim sourced from Tier D only → tagged [UNVERIFIED] until Tier A/B corroboration
+🧪 Claim typing: All major findings typed as FACT_ONCHAIN / INFERENCE_ONCHAIN / EXTERNAL_ASSERTION before Phase 4
+═══════════════════════════
+```
+
 **Gate rules:**
-- User must confirm OR adjust before Phase 1 begins.
+- User must confirm BOTH the Analysis Plan AND the Analytical Contract before Phase 1 begins.
 - If user says "just do it" → present the plan, then proceed.
 - Auto-probe capability tier (Field 9) via test calls. Timeout/failure = assume Tier A.
 - Auto-select RPC endpoint (Field 10): read `references/rpc-endpoints.ts` → pick top Tier S/1 → probe with `eth_chainId` → fallback on failure. For BSC, MUST use endpoint with `getLogs: true` (Tier 1/2 only).
