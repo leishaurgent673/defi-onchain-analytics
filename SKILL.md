@@ -208,10 +208,11 @@ Read `references/rpc-field-guide.md` for method details. Read `references/common
 
 | Condition | Mode |
 |-----------|------|
-| ≤3 independent calls | Inline `curl` / `WebFetch` |
-| >3 sequential/dependent calls | Generate JS/TS (viem or ethers.js) |
+| Independent trivial reads (balance, nonce, single slot) | Inline `curl` |
+| Any dependent / sequential calls | Generate JS/TS (viem or ethers.js) |
+| Any `eth_getLogs` scan (any range) | Generate script |
 | Multicall3 batch | Generate script |
-| Adaptive log chunking loop | Generate script |
+| Multi-hop fund flow tracing | Generate script |
 
 Scripts must be self-contained and runnable via `node` or `npx tsx`.
 
@@ -371,5 +372,7 @@ If these appear in your reasoning → treat as investigation signal, not conclus
 - Not disclosing when a method is skipped due to tier
 - Mixing data from different blocks without anchoring
 - Trusting entity labels without cross-referencing raw data
+- Using Tier D source (Etherscan, labels, reports) before the equivalent Tier A query exists in the evidence register
+- Accepting an EXTERNAL_ASSERTION as root cause without Tier A/B corroboration
 - **Dismissing a finding without first asking "What would make this significant?"**
 - **Reporting a conclusion without disclosing what analysis was NOT performed**
