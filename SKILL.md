@@ -329,7 +329,7 @@ Common multi-pattern investigations and their recommended pattern combinations:
 | **Market Structure** — who provides liquidity, how distributed, why | dex-analytics | wallet-analytics, contract-inspection | Position enumeration → owner resolution → entity clustering → funding trace |
 | **Whale Tracking** — identify, profile, predict behavior | wallet-analytics | token-analytics, dex-analytics | Balance snapshot → transfer history → behavioral fingerprinting → DEX activity |
 | **Protocol Risk** — TVL health, admin risk, oracle dependency | protocol-analytics | contract-inspection | TVL decomposition → proxy/admin inspection → oracle staleness check |
-| **Incident Forensics** — exploit trace, fund flow, counterparty ID | wallet-analytics | contract-inspection, dex-analytics | Fund flow trace → contract inspection → DEX swap analysis → entity clustering |
+| **Incident Forensics** — exploit trace, fund flow, counterparty ID | wallet-analytics | contract-inspection, dex-analytics | Pre-attack screen (TVL trajectory, 72h suspicious activity, capital flow) → Fund flow trace → contract inspection → DEX swap analysis → entity clustering |
 | **Token Due Diligence** — supply integrity, holder risk, vesting pressure | token-analytics | wallet-analytics, contract-inspection | Supply audit → holder concentration → whale behavior → vesting schedule |
 
 ## Investigation Discipline — 7-Layer Defense
