@@ -3,6 +3,19 @@
 > Referenced from SKILL.md. Detailed methodology for each defense layer.
 > Inspired by adversarial verification architectures used in security audit agent systems.
 
+## Contents
+- [Why This Exists](#why-this-exists)
+- [Layer 1: Anti-Rationalization](#layer-1-anti-rationalization--dismissal--investigation-signal)
+- [Layer 2: Iterative Depth](#layer-2-iterative-depth--multi-pass-analysis)
+- [Phase 3 → Phase 4 Exit Gate](#phase-3--phase-4-exit-gate--artifact-based)
+- [Layer 3: Anti-Normalization](#layer-3-anti-normalization--sophistication-looks-normal)
+- [Layer 4: Blind Spot Audit](#layer-4-blind-spot-audit--what-you-didnt-investigate)
+- [Layer 5: Confidence-Triggered Deepening](#layer-5-confidence-triggered-deepening)
+- [Layer 6: Adversarial Self-Review](#layer-6-adversarial-self-review--devils-advocate)
+- [Layer 7: Gap Logging](#layer-7-gap-logging--no-silent-omissions)
+
+---
+
 ## Why This Exists
 
 LLM agents have systematic failure modes in analytical work:
