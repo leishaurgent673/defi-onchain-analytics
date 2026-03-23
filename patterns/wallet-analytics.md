@@ -5,6 +5,16 @@
 > - **Tier C (TRACE)** — Complete native ETH fund flow via `debug_traceTransaction` with `callTracer(withLog:true)`, capturing internal transfers invisible to `eth_getLogs`
 > - **Tier D (ENRICH)** — Entity labels from third-party providers (Chainalysis, Arkham, Nansen), heuristic-derived and subject to degradation
 
+## Contents
+- [Address Clustering Heuristics](#address-clustering-heuristics)
+- [Sybil Detection Topologies](#sybil-detection-topologies)
+- [Wallet Profiling Methodology](#wallet-profiling-methodology-core)
+- [Native ETH Tracking Limitation](#native-eth-tracking-limitation)
+- [Exchange Netflow Analysis](#exchange-netflow-analysis)
+- [Smart Money Signal Detection](#smart-money-signal-detection)
+- [Entity Clustering via On-Chain Behavior](#entity-clustering-via-on-chain-behavior)
+- [Pitfall Pack](#pitfall-pack)
+
 ---
 
 ## Address Clustering Heuristics

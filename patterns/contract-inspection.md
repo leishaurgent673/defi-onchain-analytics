@@ -4,6 +4,17 @@
 > - **Tier A (CORE)** — Event log decoding, storage reads, proxy detection, bytecode analysis, access list prediction
 > - **Tier C (TRACE)** — Trace-based fund flow analysis, state diff analysis, state override hypothesis testing
 
+## Contents
+- [Event Log Decoding Workflow](#event-log-decoding-workflow-core)
+- [Storage Inspection Workflow](#storage-inspection-workflow-core)
+- [Proxy Inspection](#proxy-inspection-core)
+- [Trace Analysis: Fund Flow](#trace-analysis-fund-flow-trace)
+- [Trace Analysis: State Diff](#trace-analysis-state-diff-trace)
+- [State Override Hypothesis Testing](#state-override-hypothesis-testing-trace)
+- [Bytecode Analysis](#bytecode-analysis-core)
+- [Access List Prediction](#access-list-prediction-core)
+- [Pitfall Pack](#pitfall-pack)
+
 ---
 
 ## Event Log Decoding Workflow `[CORE]`

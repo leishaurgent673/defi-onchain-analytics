@@ -2,6 +2,19 @@
 
 **Minimum tier:** A (CORE) for all analysis.
 
+## Contents
+- [Uniswap V3 Math](#uniswap-v3-math)
+- [Swap Volume Analytics](#swap-volume-analytics-core)
+- [MEV Noise Filtering](#mev-noise-filtering)
+- [LP Position Analytics](#lp-position-analytics-core)
+- [Position Owner Resolution](#position-owner-resolution-core)
+- [Quoting / Price Impact](#quoting--price-impact-core)
+- [Tick Discovery via Bitmap](#tick-discovery-via-bitmap)
+- [Liquidity Depth Analysis](#liquidity-depth-analysis)
+- [Uniswap V2 Comparison](#uniswap-v2-comparison)
+- [Pitfall Pack](#pitfall-pack)
+- [Automated LP / Market Maker Behavioral Signals](#automated-lp--market-maker-behavioral-signals)
+
 ---
 
 ## Uniswap V3 Math

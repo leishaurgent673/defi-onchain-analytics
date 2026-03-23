@@ -2,6 +2,15 @@
 
 **Minimum tier:** A (CORE) for current state reads. B (ARCHIVE) for historical TVL time series via `eth_getBalance`/`eth_call` at past block numbers.
 
+## Contents
+- [TVL Decomposition](#tvl-decomposition)
+- [ERC-4626 Vault Analytics](#erc-4626-vault-analytics)
+- [Risk Scoring Framework](#risk-scoring-framework)
+- [Yield Analysis](#yield-analysis)
+- [Uniswap V3/V4 Pool State Reading](#uniswap-v3v4-pool-state-reading)
+- [Lending Protocol State](#lending-protocol-state)
+- [Pitfall Pack](#pitfall-pack)
+
 ---
 
 ## TVL Decomposition

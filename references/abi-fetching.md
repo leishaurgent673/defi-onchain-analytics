@@ -2,6 +2,14 @@
 
 Strategies for resolving ABIs, decoding events, reading raw storage, detecting proxy patterns, and extracting selectors from bytecode when no verified source is available.
 
+## Contents
+- [Event Decoding Flow (viem)](#event-decoding-flow-viem)
+- [Indexed Parameter Gotcha](#indexed-parameter-gotcha)
+- [Solidity Storage Layout](#solidity-storage-layout-for-eth_getstorageat)
+- [Proxy Pattern Detection](#proxy-pattern-detection-core)
+- [Bytecode Selector Extraction](#bytecode-selector-extraction-core)
+- [External ABI Resolution](#external-abi-resolution-enrich)
+
 ---
 
 ## Event Decoding Flow (viem)
