@@ -90,6 +90,21 @@ Collect through natural dialogue. For **every** field the user doesn't specify, 
 
 ---
 
+## Analytical Contract — What to Commit Before Phase 1
+
+After the user confirms the Analysis Plan, fill in the Analytical Contract. This is a methodological commitment, not a summary. Be specific — vague entries defeat the purpose.
+
+| Field | What "specific" looks like | What "vague" looks like |
+|:------|:--------------------------|:------------------------|
+| **Tier A baseline** | `eth_getTransactionReceipt(0xabc...), eth_getLogs(token Transfer, blocks 19M-19.1M)` | "some RPC calls" |
+| **Script trigger** | `YES — multi-hop fund flow requires BFS; start from forensic-script-scaffold.ts` | "maybe" |
+| **Root cause standard** | `"AWS KMS compromise" is EXTERNAL_ASSERTION [UNVERIFIED] — need eth_getLogs to confirm SERVICE_ROLE usage` | "will verify claims" |
+| **Claim typing** | Confirmed: all findings will be typed before Phase 4 | (omit if obvious) |
+
+If the user says "just do it" → fill in the contract yourself based on the Analysis Plan, then proceed.
+
+---
+
 ## Anti-Patterns — STOP if you catch yourself doing these
 
 | ❌ Anti-pattern | ✅ Instead |
