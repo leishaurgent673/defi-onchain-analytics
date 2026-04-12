@@ -1,6 +1,6 @@
-#!/usr/bin/env npx tsx
+#!/usr/bin/env bun
 // Forensic Script Scaffold — canonical template for incident forensics.
-// Run:  npm install viem && npx tsx references/forensic-script-scaffold.ts
+// Run:  bun run references/forensic-script-scaffold.ts
 // Env:  RPC_URL=https://your-endpoint (defaults to publicnode)
 // Covers ERC-20 flow only; native ETH tracing needs debug_traceTransaction (Tier C).
 import {

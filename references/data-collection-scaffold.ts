@@ -1,6 +1,6 @@
-#!/usr/bin/env npx tsx
+#!/usr/bin/env bun
 // Data Collection Scaffold — bulk RPC with rate limiting, endpoint rotation, checkpoint/resume, CSV output.
-// Run:  npm install viem && npx tsx references/data-collection-scaffold.ts
+// Run:  bun run references/data-collection-scaffold.ts
 // Env:  RPC_URLS=url1,url2,url3 (comma-separated, for rotation)
 //       CHECKPOINT_FILE=checkpoint.json (optional, for resume)
 //

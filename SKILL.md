@@ -266,12 +266,12 @@ Read `references/rpc-field-guide.md` when choosing RPC methods or when `eth_getL
 | Condition | Mode |
 |-----------|------|
 | Independent trivial reads (balance, nonce, single slot) | Inline `curl` |
-| Any dependent / sequential calls | Generate JS/TS (viem or ethers.js) |
+| Any dependent / sequential calls | Generate TS script (viem) |
 | Any `eth_getLogs` scan (any range) | Generate script |
 | Multicall3 batch | Generate script |
 | Multi-hop fund flow tracing | Generate script |
 
-Scripts must be self-contained and runnable via `node` or `npx tsx`.
+Scripts must be self-contained, use viem, and runnable via `bun run script.ts`. Do not create `package.json` or install packages locally — bun auto-resolves npm imports from its global cache, leaving no artifacts in the working directory.
 
 **For bulk data collection (>100 RPC calls):** Read `references/data-collection-scaffold.ts` — covers rate limiting, endpoint rotation, checkpoint/resume, and CSV output. This saves reinventing these patterns from scratch each time.
 

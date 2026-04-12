@@ -1,6 +1,6 @@
-#!/usr/bin/env npx tsx
+#!/usr/bin/env bun
 // Proxy Resolver Scaffold — resolve proxy chain, extract selectors, lookup signatures, output partial ABI.
-// Run:  npm install viem && npx tsx references/proxy-resolver-scaffold.ts
+// Run:  bun run references/proxy-resolver-scaffold.ts
 // Env:  RPC_URL=https://your-endpoint (defaults to publicnode)
 //       TARGET=0xContractAddress
 import {
